@@ -12,8 +12,8 @@
 
 /* ── Resort dot markers ───────────────────────────────────────────────────── */
 .resort-dot {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   border: 1.5px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
