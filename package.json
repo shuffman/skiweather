@@ -10,8 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "start": "vite preview --host --port ${PORT:-4173}"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",
