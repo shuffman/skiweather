@@ -1,22 +1,51 @@
 import "./WeatherPopup.css";
 
+function tempColor(f) {
+  if (f <= 10)  return "#93c5fd";
+  if (f <= 25)  return "#60a5fa";
+  if (f <= 32)  return "#3b82f6";
+  if (f <= 40)  return "#818cf8";
+  if (f <= 50)  return "#a78bfa";
+  if (f <= 60)  return "#f59e0b";
+  return "#ef4444";
+}
+
 function DepthBar({ label, inches }) {
   if (inches == null) return null;
+  const pct = Math.min(100, (parseFloat(inches) / 120) * 100);
   return (
     <div className="depth-row">
       <span className="depth-label">{label}</span>
       <div className="depth-bar-wrap">
-        <div
-          className="depth-bar-fill"
-          style={{ width: `${Math.min(100, (inches / 120) * 100)}%` }}
-        />
+        <div className="depth-bar-fill" style={{ "--pct": `${pct}%` }} />
       </div>
-      <span className="depth-val">{Math.round(inches)}"</span>
+      <span className="depth-val">{Math.round(parseFloat(inches))}"</span>
+    </div>
+  );
+}
+
+function ForecastStrip({ forecast }) {
+  if (!forecast?.length) return null;
+  return (
+    <div className="forecast-strip">
+      {forecast.map((day, i) => (
+        <div key={i} className="forecast-day">
+          <span className="fc-day">{day.day}</span>
+          <span className="fc-icon">{day.icon}</span>
+          <span className="fc-high">{day.highF}°</span>
+          <span className="fc-low">{day.lowF}°</span>
+          {parseFloat(day.snowIn) > 0 && (
+            <span className="fc-snow">❄{day.snowIn}"</span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
 
 export default function WeatherPopup({ resort, weather, loading, error, conditions }) {
+  const powderAlert = parseFloat(conditions?.newSnow24In) >= 6;
+
   const hasConditions = conditions && (
     conditions.baseDepthIn != null ||
     conditions.openLifts != null ||
@@ -27,10 +56,14 @@ export default function WeatherPopup({ resort, weather, loading, error, conditio
     <div className="weather-popup">
       <div className="popup-header">
         <span className="popup-resort-name">{resort.name}</span>
-        <span className="popup-location">
-          {resort.state}, {resort.country}
-        </span>
+        <span className="popup-location">{resort.state}, {resort.country}</span>
       </div>
+
+      {powderAlert && (
+        <div className="powder-alert">
+          ❄️ POWDER ALERT — {conditions.newSnow24In}" in 24h!
+        </div>
+      )}
 
       {loading && (
         <div className="popup-loading">
@@ -39,9 +72,7 @@ export default function WeatherPopup({ resort, weather, loading, error, conditio
         </div>
       )}
 
-      {error && (
-        <div className="popup-error">⚠️ Could not load weather</div>
-      )}
+      {error && <div className="popup-error">⚠️ Could not load weather</div>}
 
       {!loading && !error && weather && (
         <div className="popup-body">
@@ -49,7 +80,9 @@ export default function WeatherPopup({ resort, weather, loading, error, conditio
             <span className="condition-icon">{weather.icon}</span>
             <div className="condition-text">
               <span className="condition-label">{weather.condition}</span>
-              <span className="temp-main">{weather.tempF}°F</span>
+              <span className="temp-main" style={{ color: tempColor(weather.tempF) }}>
+                {weather.tempF}°F
+              </span>
               <span className="feels-like">Feels like {weather.feelsLikeF}°F</span>
             </div>
           </div>
@@ -67,9 +100,7 @@ export default function WeatherPopup({ resort, weather, loading, error, conditio
             </div>
             <div className="stat">
               <span className="stat-label">Wind</span>
-              <span className="stat-value">
-                {weather.windMph} mph {weather.windDir}
-              </span>
+              <span className="stat-value">{weather.windMph} mph {weather.windDir}</span>
             </div>
             <div className="stat">
               <span className="stat-label">Gusts</span>
@@ -90,6 +121,8 @@ export default function WeatherPopup({ resort, weather, loading, error, conditio
               </div>
             )}
           </div>
+
+          <ForecastStrip forecast={weather.forecast} />
         </div>
       )}
 
@@ -133,8 +166,7 @@ export default function WeatherPopup({ resort, weather, loading, error, conditio
               <div className="stat">
                 <span className="stat-label">Lifts Open</span>
                 <span className="stat-value">
-                  {conditions.openLifts}
-                  {conditions.totalLifts ? ` / ${conditions.totalLifts}` : ""}
+                  {conditions.openLifts}{conditions.totalLifts ? ` / ${conditions.totalLifts}` : ""}
                 </span>
               </div>
             )}
@@ -142,8 +174,7 @@ export default function WeatherPopup({ resort, weather, loading, error, conditio
               <div className="stat">
                 <span className="stat-label">Trails Open</span>
                 <span className="stat-value">
-                  {conditions.openTrails}
-                  {conditions.totalTrails ? ` / ${conditions.totalTrails}` : ""}
+                  {conditions.openTrails}{conditions.totalTrails ? ` / ${conditions.totalTrails}` : ""}
                 </span>
               </div>
             )}

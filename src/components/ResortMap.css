@@ -7,16 +7,67 @@
 .leaflet-map {
   width: 100%;
   height: 100%;
-  background: #cdd8e3;
+  background: #111827;
 }
 
-/* Override default Leaflet popup styles */
+/* ── Resort dot markers ───────────────────────────────────────────────────── */
+.resort-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s ease;
+  cursor: pointer;
+}
+
+.resort-dot:hover {
+  transform: scale(1.4);
+}
+
+/* Fresh snow pulse */
+.resort-dot.fresh-snow {
+  animation: snow-pulse 2.2s ease-out infinite;
+}
+
+@keyframes snow-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(148, 215, 255, 0.8), 0 1px 4px rgba(0,0,0,0.5); }
+  60%  { box-shadow: 0 0 0 8px rgba(148, 215, 255, 0), 0 1px 4px rgba(0,0,0,0.5); }
+  100% { box-shadow: 0 0 0 0 rgba(148, 215, 255, 0), 0 1px 4px rgba(0,0,0,0.5); }
+}
+
+/* ── Cluster icons ────────────────────────────────────────────────────────── */
+.cluster-icon {
+  background: radial-gradient(circle at 40% 35%, #3b82f6, #1e3a8a);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s;
+}
+
+.cluster-icon:hover {
+  transform: scale(1.1);
+}
+
+.cluster-icon span {
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.3px;
+}
+
+/* ── Popup overrides ──────────────────────────────────────────────────────── */
 .resort-popup .leaflet-popup-content-wrapper {
   padding: 0;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.08);
   overflow: hidden;
   border: none;
+  background: transparent;
 }
 
 .resort-popup .leaflet-popup-content {
@@ -28,7 +79,7 @@
   display: none;
 }
 
-/* Map controls overlay */
+/* ── Map controls ─────────────────────────────────────────────────────────── */
 .map-controls {
   position: absolute;
   top: 12px;
@@ -47,67 +98,87 @@
   height: 36px;
   border: none;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(30, 30, 46, 0.92);
   cursor: pointer;
   font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   transition: background 0.15s;
   line-height: 1;
   padding: 0;
-  color: #2563a8;
+  color: #60a5fa;
 }
 
 .locate-btn:hover {
-  background: #e8f0ff;
+  background: rgba(37, 99, 168, 0.6);
 }
 
-/* Legend */
+/* ── Legend ───────────────────────────────────────────────────────────────── */
 .map-legend {
   position: absolute;
   bottom: 28px;
   right: 10px;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
   display: flex;
-  gap: 12px;
-  align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  color: #333;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  color: #cbd5e1;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.legend-snow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.legend-snow > span:first-child {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .legend-dot {
   display: inline-block;
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  border: 1.5px solid #fff;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
-  margin-right: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
 }
 
-.legend-dot.us {
-  background: #2563a8;
+.legend-pulse {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
 }
 
-.legend-dot.ca {
-  background: #e8a020;
+.legend-pulse-dot {
+  display: inline-block;
+  flex-shrink: 0;
 }
 
-/* Mobile tweaks */
 @media (max-width: 600px) {
-  .map-controls {
-    top: 8px;
-  }
+  .map-controls { top: 8px; }
   .map-legend {
     bottom: 24px;
-    font-size: 11px;
-    padding: 5px 8px;
+    font-size: 10px;
+    padding: 6px 8px;
   }
+  .legend-snow { gap: 5px; }
 }

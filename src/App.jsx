@@ -12,6 +12,7 @@ export default function App() {
             <p>Hover or tap a resort for live conditions</p>
           </div>
         </div>
+        <span className="header-snowflakes">❄ ❄ ❄</span>
       </header>
       <main className="app-main">
         <ResortMap />

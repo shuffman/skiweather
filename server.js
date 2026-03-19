@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 // ── In-memory cache ─────────────────────────────────────────────────────────
 const cache = new Map();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL = 30 * 60 * 1000;
 
 function cached(key, fn) {
   const hit = cache.get(key);
@@ -63,35 +63,62 @@ function normalizeSnoCountry(data) {
   };
 }
 
+// ── Shared fetch helpers (used by individual + batch routes) ─────────────────
+async function fetchMtnpowder(id) {
+  const raw = await cached(`mtnpowder-${id}`, () =>
+    fetch(`https://mtnpowder.com/feed?resortId=${encodeURIComponent(id)}`).then((r) => r.json())
+  );
+  return normalizeMtnpowder(raw);
+}
+
+async function fetchSnocountry(id) {
+  const raw = await cached(`snocountry-${id}`, () =>
+    fetch(`http://feeds.snocountry.net/conditions.php?apiKey=SnoCountry.example&ids=${encodeURIComponent(id)}`).then((r) => r.json())
+  );
+  return normalizeSnoCountry(raw);
+}
+
 // ── API routes ────────────────────────────────────────────────────────────────
 app.get("/api/conditions/mtnpowder/:id", async (req, res) => {
   try {
-    const data = await cached(`mtnpowder-${req.params.id}`, () =>
-      fetch(
-        `https://mtnpowder.com/feed?resortId=${encodeURIComponent(req.params.id)}`
-      ).then((r) => r.json())
-    );
-    const normalized = normalizeMtnpowder(data);
-    if (!normalized) return res.status(404).json({ error: "No data" });
-    res.json(normalized);
-  } catch (e) {
+    const data = await fetchMtnpowder(req.params.id);
+    if (!data) return res.status(404).json({ error: "No data" });
+    res.json(data);
+  } catch {
     res.status(502).json({ error: "Upstream error" });
   }
 });
 
 app.get("/api/conditions/snocountry/:id", async (req, res) => {
   try {
-    const data = await cached(`snocountry-${req.params.id}`, () =>
-      fetch(
-        `http://feeds.snocountry.net/conditions.php?apiKey=SnoCountry.example&ids=${encodeURIComponent(req.params.id)}`
-      ).then((r) => r.json())
-    );
-    const normalized = normalizeSnoCountry(data);
-    if (!normalized) return res.status(404).json({ error: "No data" });
-    res.json(normalized);
-  } catch (e) {
+    const data = await fetchSnocountry(req.params.id);
+    if (!data) return res.status(404).json({ error: "No data" });
+    res.json(data);
+  } catch {
     res.status(502).json({ error: "Upstream error" });
   }
+});
+
+// Batch endpoint — ?ids=mtnpowder:60,snocountry:303007,...
+app.get("/api/conditions/batch", async (req, res) => {
+  const { ids } = req.query;
+  if (!ids) return res.json([]);
+  const pairs = ids.split(",").filter(Boolean).map((p) => {
+    const [source, id] = p.split(":");
+    return { source, id };
+  });
+  const results = await Promise.allSettled(
+    pairs.map(({ source, id }) =>
+      source === "mtnpowder" ? fetchMtnpowder(id) : fetchSnocountry(id)
+    )
+  );
+  res.json(
+    pairs.map(({ source, id }, i) => ({
+      source,
+      id,
+      data: results[i].status === "fulfilled" ? results[i].value : null,
+    }))
+  );
 });
 
 // ── Serve static Vite build ───────────────────────────────────────────────────
