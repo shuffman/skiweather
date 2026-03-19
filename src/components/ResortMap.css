@@ -12,17 +12,18 @@
 
 /* ── Resort dot markers ───────────────────────────────────────────────────── */
 .resort-dot {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  border: 2.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0,0,0,0.3);
   transition: transform 0.15s ease;
   cursor: pointer;
 }
 
 .resort-dot:hover {
-  transform: scale(1.4);
+  transform: scale(1.5);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255,255,255,0.4);
 }
 
 /* Fresh snow pulse */

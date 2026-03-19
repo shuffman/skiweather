@@ -35,9 +35,9 @@ function createResortIcon(color, hasFreshSnow, border = "rgba(255,255,255,0.9)")
   return L.divIcon({
     className: "",
     html: `<div class="resort-dot${hasFreshSnow ? " fresh-snow" : ""}" style="background:${color};border-color:${border}"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-    popupAnchor: [0, -9],
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    popupAnchor: [0, -12],
   });
 }
 
