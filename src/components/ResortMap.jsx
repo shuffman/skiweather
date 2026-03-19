@@ -1,4 +1,4 @@
-import { useRef, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -9,13 +9,13 @@ import {
 import "leaflet/dist/leaflet.css";
 import { resorts } from "../data/resorts";
 import { fetchWeather } from "../utils/weather";
+import { fetchConditions } from "../utils/conditions";
 import WeatherPopup from "./WeatherPopup";
 import SearchBox from "./SearchBox";
 import "./ResortMap.css";
 
-// Cache so repeated hovers don't re-fetch within a session
 const weatherCache = new Map();
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 10 * 60 * 1000;
 
 function getMarkerColor(country) {
   return country === "CA" ? "#e8a020" : "#2563a8";
@@ -25,24 +25,29 @@ function ResortMarker({ resort }) {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [conditions, setConditions] = useState(null);
 
   const handleOpen = useCallback(async () => {
     const key = `${resort.lat},${resort.lon}`;
     const cached = weatherCache.get(key);
     if (cached && Date.now() - cached.ts < CACHE_TTL) {
       setWeather(cached.data);
-      return;
+    } else {
+      setLoading(true);
+      setError(false);
+      fetchWeather(resort.lat, resort.lon)
+        .then((data) => {
+          weatherCache.set(key, { data, ts: Date.now() });
+          setWeather(data);
+        })
+        .catch(() => setError(true))
+        .finally(() => setLoading(false));
     }
-    setLoading(true);
-    setError(false);
-    try {
-      const data = await fetchWeather(resort.lat, resort.lon);
-      weatherCache.set(key, { data, ts: Date.now() });
-      setWeather(data);
-    } catch {
-      setError(true);
-    } finally {
-      setLoading(false);
+
+    if (resort.conditions) {
+      fetchConditions(resort.conditions)
+        .then((data) => setConditions(data))
+        .catch(() => {});
     }
   }, [resort]);
 
@@ -72,6 +77,7 @@ function ResortMarker({ resort }) {
           weather={weather}
           loading={loading}
           error={error}
+          conditions={conditions}
         />
       </Popup>
     </CircleMarker>

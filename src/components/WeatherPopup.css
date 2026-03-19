@@ -59,7 +59,6 @@
 .popup-body {
   padding: 10px 12px 12px;
   background: #fff;
-  border-radius: 0 0 8px 8px;
 }
 
 .condition-row {
@@ -130,4 +129,90 @@
 
 .stat-value.snow {
   color: #2563a8;
+}
+
+/* ── Conditions panel ───────────────────────────────────────────────────── */
+.conditions-body {
+  padding: 10px 12px 12px;
+  background: #f4f8ff;
+  border-top: 1px solid #dce8f8;
+  border-radius: 0 0 8px 8px;
+}
+
+.conditions-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #2563a8;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.surface-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  background: #dce8f8;
+  color: #1a3a6b;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* Snow depth bars */
+.depth-section {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.depth-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.depth-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  width: 38px;
+  flex-shrink: 0;
+}
+
+.depth-bar-wrap {
+  flex: 1;
+  height: 7px;
+  background: #dce8f8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.depth-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563a8, #60a5fa);
+  border-radius: 4px;
+  min-width: 2px;
+  transition: width 0.4s ease;
+}
+
+.depth-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a3a6b;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.conditions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
 }
