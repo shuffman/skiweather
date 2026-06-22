@@ -26,6 +26,25 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255,255,255,0.4);
 }
 
+/* Filter match / dim states */
+.resort-dot.dimmed {
+  opacity: 0.25;
+  filter: grayscale(0.7);
+}
+
+.resort-dot.matched {
+  border-color: #fde047;
+  box-shadow: 0 0 0 3px rgba(253, 224, 71, 0.45), 0 2px 8px rgba(0, 0, 0, 0.7);
+  animation: match-pulse 1.8s ease-out infinite;
+  z-index: 500;
+}
+
+@keyframes match-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.7), 0 2px 8px rgba(0,0,0,0.6); }
+  70%  { box-shadow: 0 0 0 10px rgba(253, 224, 71, 0), 0 2px 8px rgba(0,0,0,0.6); }
+  100% { box-shadow: 0 0 0 0 rgba(253, 224, 71, 0), 0 2px 8px rgba(0,0,0,0.6); }
+}
+
 /* Fresh snow pulse */
 .resort-dot.fresh-snow {
   animation: snow-pulse 2.2s ease-out infinite;
@@ -84,13 +103,12 @@
 .map-controls {
   position: absolute;
   top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 12px;
   z-index: 1000;
   display: flex;
   gap: 8px;
   align-items: center;
-  width: min(480px, calc(100vw - 24px));
+  width: min(360px, calc(100vw - 280px));
 }
 
 .locate-btn {
@@ -175,9 +193,15 @@
 }
 
 @media (max-width: 600px) {
-  .map-controls { top: 8px; }
+  .map-controls {
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
   .map-legend {
-    bottom: 24px;
+    bottom: 60px;
     font-size: 10px;
     padding: 6px 8px;
   }

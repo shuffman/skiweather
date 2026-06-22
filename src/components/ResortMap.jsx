@@ -10,10 +10,11 @@ import {
 import MarkerClusterGroup from "react-leaflet-cluster";
 import "leaflet/dist/leaflet.css";
 import { resorts } from "../data/resorts";
-import { fetchWeather } from "../utils/weather";
+import { fetchWeather, fetchAllWeather } from "../utils/weather";
 import { fetchAllConditions } from "../utils/conditions";
 import WeatherPopup from "./WeatherPopup";
 import SearchBox from "./SearchBox";
+import FilterPanel, { TEMP_MIN, TEMP_MAX } from "./FilterPanel";
 import "./ResortMap.css";
 
 const weatherCache = new Map();
@@ -31,10 +32,12 @@ function snowDepthColor(depthIn, country) {
   return "#e0f2fe"; // 96"+ — near-white for epic conditions
 }
 
-function createResortIcon(color, hasFreshSnow, border = "rgba(255,255,255,0.9)") {
+function createResortIcon(color, hasFreshSnow, matchState, border = "rgba(255,255,255,0.9)") {
+  const stateClass =
+    matchState === "match" ? " matched" : matchState === "dim" ? " dimmed" : "";
   return L.divIcon({
     className: "",
-    html: `<div class="resort-dot${hasFreshSnow ? " fresh-snow" : ""}" style="background:${color};border-color:${border}"></div>`,
+    html: `<div class="resort-dot${hasFreshSnow ? " fresh-snow" : ""}${stateClass}" style="background:${color};border-color:${border}"></div>`,
     iconSize: [22, 22],
     iconAnchor: [11, 11],
     popupAnchor: [0, -12],
@@ -53,7 +56,7 @@ function createClusterIcon(cluster) {
 }
 
 // ── Individual resort marker ──────────────────────────────────────────────────
-const ResortMarker = memo(function ResortMarker({ resort, conditions }) {
+const ResortMarker = memo(function ResortMarker({ resort, conditions, matchState }) {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -81,8 +84,8 @@ const ResortMarker = memo(function ResortMarker({ resort, conditions }) {
   const hasFreshSnow = parseFloat(conditions?.newSnow24In) > 0;
   const color = snowDepthColor(conditions?.baseDepthIn, resort.country);
   const icon = useMemo(
-    () => createResortIcon(color, hasFreshSnow),
-    [color, hasFreshSnow]
+    () => createResortIcon(color, hasFreshSnow, matchState),
+    [color, hasFreshSnow, matchState]
   );
 
   return (
@@ -130,14 +133,63 @@ function MapControls() {
 // ── Main map ──────────────────────────────────────────────────────────────────
 export default function ResortMap() {
   const [conditionsMap, setConditionsMap] = useState(new Map());
+  const [weatherMap, setWeatherMap] = useState(new Map());
+  const [weatherLoading, setWeatherLoading] = useState(true);
 
-  // Pre-load all conditions in one batch request on mount
+  // Filter state
+  const [tempRange, setTempRange] = useState({ min: TEMP_MIN, max: TEMP_MAX });
+  const [conditions, setConditions] = useState(new Set());
+
+  // Pre-load all conditions + current weather in batch requests on mount
   useEffect(() => {
     fetchAllConditions(resorts).then(setConditionsMap).catch(() => {});
+    fetchAllWeather(resorts)
+      .then(setWeatherMap)
+      .catch(() => {})
+      .finally(() => setWeatherLoading(false));
   }, []);
+
+  const filtersActive =
+    tempRange.min > TEMP_MIN ||
+    tempRange.max < TEMP_MAX ||
+    conditions.size > 0;
+
+  // Per-resort match: "match" | "dim" | "none"
+  const matchStates = useMemo(() => {
+    const states = new Map();
+    resorts.forEach((_, i) => {
+      if (!filtersActive) {
+        states.set(i, "none");
+        return;
+      }
+      const w = weatherMap.get(i);
+      const ok =
+        w &&
+        w.tempF >= tempRange.min &&
+        w.tempF <= tempRange.max &&
+        (conditions.size === 0 || conditions.has(w.category));
+      states.set(i, ok ? "match" : "dim");
+    });
+    return states;
+  }, [filtersActive, weatherMap, tempRange, conditions]);
+
+  const matchCount = useMemo(() => {
+    if (!filtersActive) return resorts.length;
+    let n = 0;
+    matchStates.forEach((s) => s === "match" && n++);
+    return n;
+  }, [matchStates, filtersActive]);
 
   return (
     <div className="map-wrapper">
+      <FilterPanel
+        tempRange={tempRange}
+        setTempRange={setTempRange}
+        conditions={conditions}
+        setConditions={setConditions}
+        matchCount={matchCount}
+        loading={weatherLoading}
+      />
       <MapContainer
         center={[47, -96]}
         zoom={4}
@@ -168,6 +220,7 @@ export default function ResortMap() {
               key={i}
               resort={resort}
               conditions={conditionsMap.get(i)}
+              matchState={matchStates.get(i)}
             />
           ))}
         </MarkerClusterGroup>

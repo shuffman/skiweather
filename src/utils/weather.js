@@ -15,6 +15,60 @@ export const weatherIcons = {
   82: "⛈️", 85: "🌨️", 86: "❄️", 95: "⛈️", 96: "⛈️", 99: "⛈️",
 };
 
+// ── Weather condition categories (for filtering) ─────────────────────────────
+export const WEATHER_CATEGORIES = {
+  clear:  { label: "Clear",   icon: "☀️", codes: [0, 1] },
+  cloudy: { label: "Cloudy",  icon: "☁️", codes: [2, 3, 45, 48] },
+  snow:   { label: "Snowing", icon: "🌨️", codes: [71, 73, 75, 77, 85, 86] },
+  rain:   { label: "Rain",    icon: "🌧️", codes: [51, 53, 55, 61, 63, 65, 80, 81, 82] },
+  storm:  { label: "Storm",   icon: "⛈️", codes: [95, 96, 99] },
+};
+
+export function weatherCategory(code) {
+  for (const [key, { codes }] of Object.entries(WEATHER_CATEGORIES)) {
+    if (codes.includes(code)) return key;
+  }
+  return null;
+}
+
+// Fetch current temperature + condition for every resort in batched requests.
+// Returns a Map<resortIndex, { tempF, code, category }>.
+export async function fetchAllWeather(resorts) {
+  const CHUNK = 100;
+  const map = new Map();
+
+  for (let start = 0; start < resorts.length; start += CHUNK) {
+    const chunk = resorts.slice(start, start + CHUNK);
+    const params = new URLSearchParams({
+      latitude: chunk.map((r) => r.lat).join(","),
+      longitude: chunk.map((r) => r.lon).join(","),
+      current: "temperature_2m,weather_code",
+      temperature_unit: "fahrenheit",
+    });
+
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data : [data];
+      arr.forEach((d, i) => {
+        const code = d.current?.weather_code;
+        const t = d.current?.temperature_2m;
+        if (t == null) return;
+        map.set(start + i, {
+          tempF: Math.round(t),
+          code,
+          category: weatherCategory(code),
+        });
+      });
+    } catch {
+      // skip this chunk on failure
+    }
+  }
+
+  return map;
+}
+
 function windDirection(deg) {
   const dirs = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
   return dirs[Math.round(deg / 22.5) % 16];
